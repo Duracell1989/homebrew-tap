@@ -1,8 +1,8 @@
 class Brewinator < Formula
   desc "Fetch and archive release notes for outdated Homebrew packages"
   homepage "https://github.com/Duracell1989/brewinator"
-  url "https://github.com/Duracell1989/brewinator/archive/refs/tags/v0.1.0.tar.gz"
-  sha256 "cfa1906e3e53744394533dd36662f0b34efd8aa5ccf1c760c0701cd663adc6df"
+  url "https://github.com/Duracell1989/brewinator/archive/refs/tags/v0.2.0.tar.gz"
+  sha256 "7fd70fcf8dbcae97b75128415ebbd01278d0429daba175db4333bb53ae72a3fc"
   license "MIT"
 
   depends_on xcode: ["16.0", :build]
@@ -14,13 +14,12 @@ class Brewinator < Formula
   end
 
   test do
-    # --help/--version don't reliably intercept on the beta toolchain this was
-    # built against (ArgumentParser's AsyncParsableCommand check is broken),
-    # so verification uses real first-run behavior instead: Homebrew's test
-    # sandbox points $HOME at a scratch dir, so no config exists, and
-    # brewinator prints a friendly message and exits 1.
-    output = shell_output("#{bin}/brewinator 2>&1", 1)
-    assert_match "No config found at", output
-    assert_match "archiveDirectory", output
+    # Must stay on a path that reads nothing and writes nothing: `brew test`
+    # sandboxes the working directory but NOT $HOME, and Foundation's
+    # homeDirectoryForCurrentUser reads getpwuid rather than $HOME, so there
+    # is no way to point a real run at scratch state. v0.1.0's test ran the
+    # binary bare and fetched notes into the tester's actual archive.
+    assert_match version.to_s, shell_output("#{bin}/brewinator --version")
+    assert_match "--update", shell_output("#{bin}/brewinator --help")
   end
 end
