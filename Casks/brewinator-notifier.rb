@@ -20,11 +20,12 @@ cask "brewinator-notifier" do
   # `launchctl bootstrap` fails here with EIO however it is invoked - even a
   # fully permissive `sandbox-exec` profile does (Homebrew/brew#23891).
   #
-  # An `installer script:` with `sudo: false` would run unsandboxed and could
-  # bootstrap - the maintainer reply on that issue names it as the only route.
-  # Not taken here: the script has to ship inside the notarized zip, and
-  # `Artifact::Installer` runs ahead of `Artifact::App`, so the agent would be
-  # bootstrapped against an executable not yet in /Applications.
+  # An `installer script:` with `sudo: false` does run unsandboxed and can
+  # bootstrap - verified against a throwaway cask, rc=0. `Artifact::Installer`
+  # runs ahead of `Artifact::App`, so the agent starts out pointing at an
+  # executable not yet in /Applications and exits 78; KeepAlive then recovers
+  # it on its own once the move lands. Not taken here for one reason only: the
+  # script would have to ship inside the notarized zip.
   #
   # brewinator loads the agent itself on its next run; see
   # NotifierAgentActivation.
