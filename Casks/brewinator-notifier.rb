@@ -15,11 +15,19 @@ cask "brewinator-notifier" do
   # NotifierSelection in the formula's own source. No plist ships in the
   # release zip; it's written here so the cask stays a single download.
   #
-  # Writing it is all a cask can do. Install steps run inside a sandbox, and
-  # launchd refuses job submission from any sandboxed process, so `launchctl
-  # bootstrap` fails here with EIO however it is invoked - even a fully
-  # permissive `sandbox-exec` profile does (Homebrew/brew#23891). brewinator
-  # loads the agent itself on its next run; see NotifierAgentActivation.
+  # Writing it is all these steps can do. Install steps run inside a sandbox,
+  # and launchd refuses job submission from any sandboxed process, so
+  # `launchctl bootstrap` fails here with EIO however it is invoked - even a
+  # fully permissive `sandbox-exec` profile does (Homebrew/brew#23891).
+  #
+  # An `installer script:` with `sudo: false` would run unsandboxed and could
+  # bootstrap - the maintainer reply on that issue names it as the only route.
+  # Not taken here: the script has to ship inside the notarized zip, and
+  # `Artifact::Installer` runs ahead of `Artifact::App`, so the agent would be
+  # bootstrapped against an executable not yet in /Applications.
+  #
+  # brewinator loads the agent itself on its next run; see
+  # NotifierAgentActivation.
   postflight_steps do
     write_file "Library/LaunchAgents/dev.b89.brewinator.notifier.plist", <<~EOS, base: :home
       <?xml version="1.0" encoding="UTF-8"?>
