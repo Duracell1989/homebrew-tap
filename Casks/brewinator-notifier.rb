@@ -1,6 +1,6 @@
 cask "brewinator-notifier" do
-  version "0.9.0"
-  sha256 "b204b8a8c5f504826d29a2bd506cb94371a039bf666db7a1dc9ec0e0ac78ef79"
+  version "0.9.1"
+  sha256 "35be8d6af2584bb14aa40481c6bd57f7c0e7843e4aedf99ddda8ae9787de70d6"
 
   url "https://github.com/Duracell1989/brewinator/releases/download/v#{version}/BrewinatorNotify.zip"
   name "Brewinator Notify"
@@ -10,47 +10,23 @@ cask "brewinator-notifier" do
   depends_on macos: :sonoma
 
   app "BrewinatorNotify.app"
-
   # brewinator (the formula) picks this up automatically once installed - see
   # NotifierSelection in the formula's own source. No plist ships in the
-  # release zip; it's written here so the cask stays a single download.
+  # release zip; install-agent.sh writes it, and is the only thing here that
+  # can load it. Homebrew's declarative install steps run inside a sandbox and
+  # launchd refuses job submission from any sandboxed process, so
+  # `launchctl bootstrap` fails there with EIO however it is invoked - even
+  # under a fully permissive `sandbox-exec` profile (Homebrew/brew#23891).
+  # An installer script runs outside that sandbox, so it works here.
   #
-  # Writing it is all these steps can do. Install steps run inside a sandbox,
-  # and launchd refuses job submission from any sandboxed process, so
-  # `launchctl bootstrap` fails here with EIO however it is invoked - even a
-  # fully permissive `sandbox-exec` profile does (Homebrew/brew#23891).
-  #
-  # An `installer script:` with `sudo: false` does run unsandboxed and can
-  # bootstrap - verified against a throwaway cask, rc=0. `Artifact::Installer`
-  # runs ahead of `Artifact::App`, so the agent starts out pointing at an
-  # executable not yet in /Applications and exits 78; KeepAlive then recovers
-  # it on its own once the move lands. Not taken here for one reason only: the
-  # script would have to ship inside the notarized zip.
-  #
-  # brewinator loads the agent itself on its next run; see
-  # NotifierAgentActivation.
-  postflight_steps do
-    write_file "Library/LaunchAgents/dev.b89.brewinator.notifier.plist", <<~EOS, base: :home
-      <?xml version="1.0" encoding="UTF-8"?>
-      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-      <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>dev.b89.brewinator.notifier</string>
-        <key>ProgramArguments</key>
-        <array>
-          <string>/Applications/BrewinatorNotify.app/Contents/MacOS/BrewinatorNotify</string>
-        </array>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>KeepAlive</key>
-        <true/>
-        <key>ProcessType</key>
-        <string>Interactive</string>
-      </dict>
-      </plist>
-    EOS
-  end
+  # Installer artifacts run before the app is moved, so the agent is submitted
+  # against an executable that is not in place yet: it exits 78 and KeepAlive
+  # picks it up about a throttle interval later, once the move lands.
+  installer script: {
+    executable: "install-agent.sh",
+    args:       ["#{appdir}/BrewinatorNotify.app/Contents/MacOS/BrewinatorNotify"],
+    sudo:       false,
+  }
 
   uninstall launchctl: "dev.b89.brewinator.notifier"
 
@@ -58,11 +34,10 @@ cask "brewinator-notifier" do
 
   caveats do
     <<~EOS
-      Brewinator Notify is installed. brewinator starts it on its next run,
-      after which launchd keeps it running and relaunches it at login. The
-      first notification it shows will trigger a macOS permission prompt -
-      approve it, or check System Settings > Notifications for
-      "Brewinator Notify" if none appears.
+      Brewinator Notify is installed and its agent is loaded; launchd keeps it
+      running and relaunches it at login. The first notification it shows will
+      trigger a macOS permission prompt - approve it, or check
+      System Settings > Notifications for "Brewinator Notify" if none appears.
 
       brewinator picks it up automatically - no config change needed.
     EOS
