@@ -1,8 +1,8 @@
 class Brewinator < Formula
   desc "Fetch and archive release notes for outdated Homebrew packages"
   homepage "https://github.com/Duracell1989/brewinator"
-  url "https://github.com/Duracell1989/brewinator/archive/refs/tags/v0.14.0.tar.gz"
-  sha256 "a789e6214509f596865027ffa97edeeed4ba1f2aee8c26bfd6d82b6d4e9bb686"
+  url "https://github.com/Duracell1989/brewinator/archive/refs/tags/v0.16.0.tar.gz"
+  sha256 "c998817b100413f2f4683244c3fae090f8e8bc2b8781270cb5f04ea8cff452f0"
   license "MIT"
 
   depends_on xcode: ["16.0", :build]
