@@ -1,6 +1,6 @@
 cask "brewinator-notifier" do
-  version "0.17.0"
-  sha256 "2c69a3cf52d24038ecf2881a5707fed785db9539b3980a72c6db42f45d887474"
+  version "0.18.0"
+  sha256 "6ebbb5f0911de3a5571e6d30209d0d34fa9cf118df5e56265eaed11ddb00ab91"
 
   url "https://github.com/Duracell1989/brewinator/releases/download/v#{version}/BrewinatorNotify.zip"
   name "Brewinator Notify"
